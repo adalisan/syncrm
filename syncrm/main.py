@@ -106,19 +106,19 @@ def get_session_from_cookies():
 @app.route('/initrepo')
 def init_remarkable():
     cli.init(Namespace(**{
-        DIRECTORY: "RemarkableTablet",
-        ONE_TIME_CODE : config["OneTimeCode"],
-        verbose: True
+        'DIRECTORY': "RemarkableTablet",
+        'ONE_TIME_CODE' : config["OneTimeCode"],
+        'verbose': True
         })
     )
 
 @app.route('/initrepo')
 def checkout_remarkable():
     cli.checkout(Namespace(**{
-        verbose: True
+        'verbose': True
         }))
     
-
+@app.route('/singlepdfupload')
 def push_remarkable(pdf_file) :
     doc_uuid = str(uuid.uuid4())
     fname = os.path.basename(pdf_file)
