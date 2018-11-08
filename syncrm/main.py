@@ -1,6 +1,8 @@
+import os
 from flask import Flask, redirect, render_template, request, session
 import yaml
-
+import uuid
+import zipfile
 from mendeley import Mendeley
 from mendeley.session import MendeleySession
 import cli 
@@ -103,7 +105,7 @@ def get_session_from_cookies():
 
 @app.route('/initrepo')
 def init_remarkable():
-    cli.init(Namespace({
+    cli.init(Namespace(**{
         DIRECTORY: "RemarkableTablet",
         ONE_TIME_CODE : config["OneTimeCode"],
         verbose: True
@@ -112,15 +114,14 @@ def init_remarkable():
 
 @app.route('/initrepo')
 def checkout_remarkable():
-    cli.checkout(Namespace({
-
+    cli.checkout(Namespace(**{
         verbose: True
         }))
     
 
 def push_remarkable(pdf_file) :
     doc_uuid = str(uuid.uuid4())
-    fname = os.basename(pdf_file)
+    fname = os.path.basename(pdf_file)
     cli.push(pdf_file,doc_uuid,fname)
 
 
