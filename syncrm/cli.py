@@ -226,6 +226,9 @@ def status(args):
     except Exception as e:
         log.error(e, exc_info=args.verbose)
 
+def push(doc_path,blob_uuid,doc_name):
+    api = API(repo.client_token)
+    api.upload("",blob_uuid,doc_name,doc_path)
 
 def _modified(repo_dir, repo):
     modified = []

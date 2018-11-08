@@ -4,6 +4,7 @@
 import json
 import logging as log
 import requests
+import zipfile
 
 class API:
     def __init__(self, client_token=None):
@@ -32,6 +33,63 @@ class API:
         self.client_token = response.text
         self.discovery()
 
+    def upload(self,rel_path,blob_uuid,doc_name,doc_path):
+
+        
+        payload = [{
+            "ID": blob_uuid,
+            "Type": "DocumentType",
+            "Version": 1
+        }]
+        upload_request_url =self.storage_api +"/document-storage/json/2/upload/request"
+
+        response = requests.put(url=upload_request_url, data=payload)
+        if response.status_code == requests.codes.ok:
+            response_dict = json.loads(response.text)
+            upload_url = response_dict["BlobURLPut"]
+            if response_dict["Success"]:
+                print("success for upload request")
+                doc_payload,doc_zip = self.prepare_package(doc_uuid,'',doc_name)
+                resp_upload =requests.post(upload_url,files= {'body': open(doc_zip,'rb') })
+                print (resp_upload.content)
+                update_md_url =self.storage_api +"/document-storage/json/2/upload/update-status"
+                update_resp = requests.put(update_md_url,doc_payload)
+                print (update_resp.content)
+
+            response_up = requests.put(url=upload_url, data=payload)
+
+        
+    def prepare_package(self,doc_uuid,parent_uuid ='',doc_name ="ABC"):
+        package_json = {
+        'ID' :  doc_uuid,
+        'Parent' : parent_uuid,
+        'VissibleName' : doc_name,
+        'ModifiedClient' : utc_time,
+        'Type' : "DocumentType",
+        'Version' : 1
+        }
+        zip_name = "{}.zip".format(doc_uuid)
+        package_zip = zipfile.ZipFile(zip_name,
+                "w", zipfile.ZIP_DEFLATED)
+        package_zip.write(doc_uuid + '.pdf')
+        package_zip.writestr(doc_uuid + '.pagedata', '')
+        with open(doc_uuid+".content","w") as json_fp:
+            json.dump({
+            'extraMeatadata': [],
+            'fileType': 'pdf',
+            'lastOpenedPage': 0,
+            'lineHeight' : -1,
+            'margins' : 100,
+            #'pageCount' => 1, # we don't know this, but it seems the reMarkable can count
+            'textScale' : 1,
+            'transform' : [] # no idea how to fill this, but it seems optional
+            },json_fp
+            )
+        package_zip.write(doc_uuid + '.content')
+        package_zip.close()
+        return package_json,zip_name
+
+    
 
     def request_user_token(self):
         update_url = self.auth_api + '/token/user/new'
